@@ -39,7 +39,7 @@ def generate_footage_clip(file_path, clip_length):
 Generates the clip that will show the data gathered by the App
 """
 def generate_info_clip(data, skip_rows, clip_length):
-    bg_clip = ImageClip("black.jpg", duration=clip_length)
+    bg_clip = ImageClip("../data/black.jpg", duration=clip_length)
     speed_clip = generate_speed_clip(data, skip_rows, clip_length)
     return CompositeVideoClip([bg_clip, speed_clip])
 
