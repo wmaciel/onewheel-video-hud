@@ -46,7 +46,9 @@ def generate_info_clip(data, skip_rows, clip_length):
 def generate_speed_clip(data, skip_rows, clip_length):
     speed_clips = []
     for i in range(skip_rows, clip_length + skip_rows):
-        speed_text = '{: 4.1f} Km/h'.format(mile2Km(data[i]['speed']))
+        speed_text = '''{: 4.1f} Km/h
+        {}%
+        '''.format(mile2Km(data[i]['speed']), data[i]['battery'])
         print speed_text
         txt_clip = TextClip(speed_text, fontsize=70, color='red').set_duration(1)
         speed_clips.append(txt_clip)
@@ -70,7 +72,8 @@ def parse_logs(file_path):
         for row in log_reader:
             data.append({
                 'time':row[0],
-                'speed':row[1]
+                'speed':row[1],
+                'battery':row[2]
                 })
     print 'Loaded ', len(data), 'rows'
     return data
