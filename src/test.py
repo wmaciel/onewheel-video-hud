@@ -4,13 +4,13 @@ import csv
 """
 Main function
 """
-def main():
-    data = parse_logs('owlogs_2017-07-13_08_32.csv')
+def main(data_path, footage_path):
+    data = parse_logs(data_path)
     skip_rows = 90
     video_seconds = 15
 
     print 'Generating Footage Clip...',
-    footage_clip = generate_footage_clip("GOPR2803.MP4", video_seconds)
+    footage_clip = generate_footage_clip(footage_path, video_seconds)
     print 'OK'
 
     print 'Generating Info Clip...',
@@ -75,4 +75,9 @@ def parse_logs(file_path):
     return data
 
 if __name__ == '__main__':
-    main()
+    if len(sys.argv) != 3
+        print 'Wrong number of arguments.'
+        print 'Usage: python test.py <data_path> <footage_path>'
+        exit(1)
+
+    main(sys.argv[1], sys.argv[2])
