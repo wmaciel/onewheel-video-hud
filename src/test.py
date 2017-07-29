@@ -1,5 +1,6 @@
 from moviepy.editor import *
 import csv
+import sys
 
 """
 Main function
@@ -75,7 +76,7 @@ def parse_logs(file_path):
     return data
 
 if __name__ == '__main__':
-    if len(sys.argv) != 3
+    if len(sys.argv) != 3:
         print 'Wrong number of arguments.'
         print 'Usage: python test.py <data_path> <footage_path>'
         exit(1)
