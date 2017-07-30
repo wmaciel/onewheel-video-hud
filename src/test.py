@@ -19,7 +19,6 @@ def main(data_path, footage_path):
     print 'OK'
 
     print 'Compositing...',
-    #clip = CompositeVideoClip([clip, counting_clip.set_pos('center')])
     #clip = clips_array([[footage_clip, info_clip.set_pos('center')]])
     print 'OK'
 
@@ -48,8 +47,8 @@ def generate_speed_clip(data, skip_rows, clip_length):
     for i in range(skip_rows, clip_length + skip_rows):
         speed_text = 'Speed: {: 4.1f} Km/h'.format(mile2Km(data[i]['speed']))
         battery_text = 'Battery: {}%'.format(data[i]['battery'])
-        roll_text = 'Roll: {}'.format(float(data[i]['roll'])/10.0)
-        pitch_text = 'Pitch: {}'.format(float(data[i]['pitch'])/10.0)
+        roll_text = 'Roll: {}'.format(float(data[i]['roll'])/10.0 - 180)
+        pitch_text = 'Pitch: {}'.format(float(data[i]['pitch'])/10.0 - 180)
         info_txt = '\n'.join([speed_text, battery_text, roll_text, pitch_text])
         txt_clip = TextClip(info_txt, fontsize=50, color='red').set_duration(1)
         speed_clips.append(txt_clip)
