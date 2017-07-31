@@ -49,7 +49,8 @@ def generate_speed_clip(data, skip_rows, clip_length):
         battery_text = 'Battery: {}%'.format(data[i]['battery'])
         roll_text = 'Roll: {}'.format(float(data[i]['roll'])/10.0 - 180)
         pitch_text = 'Pitch: {}'.format(float(data[i]['pitch'])/10.0 - 180)
-        info_txt = '\n'.join([speed_text, battery_text, roll_text, pitch_text])
+        temp_text = 'Temp: {} C'.format(f_to_c(data[i]['motor_temp']))
+        info_txt = '\n'.join([speed_text, battery_text, roll_text, pitch_text, temp_text])
         txt_clip = TextClip(info_txt, fontsize=50, color='red').set_duration(1)
         speed_clips.append(txt_clip)
     speed_clip = concatenate_videoclips(speed_clips)
@@ -60,6 +61,12 @@ Converts Miles to Kilometers
 """
 def mile2Km(mile):
     return float(mile) * 1.609344
+
+"""
+Converts from Farenheint to Celsius
+"""
+def f_to_c(f_temp):
+    return (float(f_temp) - 32) * 5.0 / 9.0
 
 """
 Parses the log files and creates a list of dicts
@@ -75,7 +82,8 @@ def parse_logs(file_path):
                 'speed':row['speed'],
                 'battery':row['battery'],
                 'roll':row['tilt_angle_roll'],
-                'pitch':row['tilt_angle_pitch']
+                'pitch':row['tilt_angle_pitch'],
+                'motor_temp':row['motor_temp']
                 })
     print 'Loaded ', len(data), 'rows'
     return data
