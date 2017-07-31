@@ -39,22 +39,32 @@ Generates the clip that will show the data gathered by the App
 """
 def generate_info_clip(data, skip_rows, clip_length):
     bg_clip = ImageClip("../data/black.jpg", duration=clip_length)
-    speed_clip = generate_speed_clip(data, skip_rows, clip_length)
+    speed_clip = generate_info_text_clip(data, skip_rows, clip_length)
     return CompositeVideoClip([bg_clip, speed_clip])
 
-def generate_speed_clip(data, skip_rows, clip_length):
-    speed_clips = []
+def generate_info_text_clip(data, skip_rows, clip_length):
+    speed_text = generate_info_line_clip(data, skip_rows, clip_length, 'Speed: {: 4.1f} Km/h', 'speed')
+    battery_text = generate_info_line_clip(data, skip_rows, clip_length, 'Battery: {}%', 'battery')
+    roll_text = generate_info_line_clip(data, skip_rows, clip_length, 'Roll: {}', 'roll')
+    pitch_text = generate_info_line_clip(data, skip_rows, clip_length, 'Pitch: {}', 'pitch')
+    temp_text = generate_info_line_clip(data, skip_rows, clip_length, 'Temp: {} C', 'motor_temp')
+    info_text_clip = clips_array([
+        [speed_text],
+        [pitch_text],
+        [roll_text],
+        [battery_text],
+        [temp_text]
+    ])
+    return info_text_clip
+
+
+def generate_info_line_clip(data, skip_rows, clip_length, text, column_name):
+    info_clips = []
     for i in range(skip_rows, clip_length + skip_rows):
-        speed_text = 'Speed: {: 4.1f} Km/h'.format(mile2Km(data[i]['speed']))
-        battery_text = 'Battery: {}%'.format(data[i]['battery'])
-        roll_text = 'Roll: {}'.format(float(data[i]['roll'])/10.0 - 180)
-        pitch_text = 'Pitch: {}'.format(float(data[i]['pitch'])/10.0 - 180)
-        temp_text = 'Temp: {} C'.format(f_to_c(data[i]['motor_temp']))
-        info_txt = '\n'.join([speed_text, battery_text, roll_text, pitch_text, temp_text])
-        txt_clip = TextClip(info_txt, fontsize=50, color='red').set_duration(1)
-        speed_clips.append(txt_clip)
-    speed_clip = concatenate_videoclips(speed_clips)
-    return speed_clip
+        txt_clip = TextClip(text.format(data[i][column_name]), fontsize=50, color='red').set_duration(1)
+        info_clips.append(txt_clip)
+    line_clip = concatenate_videoclips(info_clips)
+    return line_clip
 
 """
 Converts Miles to Kilometers
@@ -66,7 +76,19 @@ def mile2Km(mile):
 Converts from Farenheint to Celsius
 """
 def f_to_c(f_temp):
-    return (float(f_temp) - 32) * 5.0 / 9.0
+    try:
+        return (float(f_temp) - 32) * 5.0 / 9.0
+    except ValueError:
+        return None
+
+"""
+Converts the original angle to values between -180 and 180, with 0 being horizontal
+"""
+def parse_angle(angle_text):
+    try:
+        return float(angle_text)/10 - 180
+    except ValueError:
+        return None
 
 """
 Parses the log files and creates a list of dicts
@@ -79,11 +101,11 @@ def parse_logs(file_path):
         for row in log_reader:
             data.append({
                 'time':row['time'],
-                'speed':row['speed'],
-                'battery':row['battery'],
-                'roll':row['tilt_angle_roll'],
-                'pitch':row['tilt_angle_pitch'],
-                'motor_temp':row['motor_temp']
+                'speed':mile2Km(row['speed']),
+                'battery':int(row['battery']),
+                'roll':parse_angle(row['tilt_angle_roll']),
+                'pitch':parse_angle(row['tilt_angle_pitch']),
+                'motor_temp':f_to_c(row['motor_temp'])
                 })
     print 'Loaded ', len(data), 'rows'
     return data
