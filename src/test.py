@@ -19,13 +19,13 @@ def main(data_path, footage_path):
     print 'OK'
 
     print 'Compositing...',
-    #clip = clips_array([[footage_clip, info_clip.set_pos('center')]])
+    clip = clips_array([[footage_clip, info_clip.set_pos('center')]])
     print 'OK'
 
     print 'Rendering...'
     #clip.write_videofile("onewheel.MP4", fps=60)
-    #clip.preview(fps=60, audio=False)
-    info_clip.preview(fps=60, audio=False)
+    #clip.resize(0.5).preview(fps=60, audio=False)
+    info_clip.resize(0.5).preview(fps=60, audio=False)
     print 'OK'
 
 """
@@ -38,32 +38,37 @@ def generate_footage_clip(file_path, clip_length):
 Generates the clip that will show the data gathered by the App
 """
 def generate_info_clip(data, skip_rows, clip_length):
-    bg_clip = ImageClip("../data/black.jpg", duration=clip_length)
     speed_clip = generate_info_text_clip(data, skip_rows, clip_length)
-    return CompositeVideoClip([bg_clip, speed_clip])
+    return speed_clip
 
 def generate_info_text_clip(data, skip_rows, clip_length):
-    speed_text = generate_info_line_clip(data, skip_rows, clip_length, 'Speed: {: 4.1f} Km/h', 'speed')
-    battery_text = generate_info_line_clip(data, skip_rows, clip_length, 'Battery: {}%', 'battery')
-    roll_text = generate_info_line_clip(data, skip_rows, clip_length, 'Roll: {}', 'roll')
-    pitch_text = generate_info_line_clip(data, skip_rows, clip_length, 'Pitch: {}', 'pitch')
-    temp_text = generate_info_line_clip(data, skip_rows, clip_length, 'Temp: {} C', 'motor_temp')
-    info_text_clip = clips_array([
-        [speed_text],
-        [pitch_text],
-        [roll_text],
-        [battery_text],
-        [temp_text]
+    speed_text = generate_info_line_clip(data, skip_rows, clip_length, '{:05.1f} Km/h', 'speed', '../data/battery.png')
+    battery_text = generate_info_line_clip(data, skip_rows, clip_length, '{}%', 'battery', '../data/battery.png')
+    roll_text = generate_info_line_clip(data, skip_rows, clip_length, '{}', 'roll', '../data/roll.png')
+    pitch_text = generate_info_line_clip(data, skip_rows, clip_length, '{}', 'pitch', '../data/pitch.png')
+    temp_text = generate_info_line_clip(data, skip_rows, clip_length, '{} C', 'motor_temp', '../data/temp.png')
+    
+    info_text_clip = CompositeVideoClip([
+        speed_text.on_color(color=[255,255,255], size=(720,1280), pos=('left', 'top')),
+        pitch_text.set_position((0.0, 0.2), relative=True),
+        roll_text.set_position((0.0, 0.4), relative=True),
+        battery_text.set_position((0.0, 0.6), relative=True),
+        temp_text.set_position((0.0, 0.8), relative=True)
     ])
+
     return info_text_clip
 
 
-def generate_info_line_clip(data, skip_rows, clip_length, text, column_name):
+def generate_info_line_clip(data, skip_rows, clip_length, text, column_name, icon_path):
     info_clips = []
     for i in range(skip_rows, clip_length + skip_rows):
-        txt_clip = TextClip(text.format(data[i][column_name]), fontsize=50, color='red').set_duration(1)
-        info_clips.append(txt_clip)
+        txt_clip = TextClip(text.format(data[i][column_name]), fontsize=70, color='black').set_duration(1)
+        icon_clip = ImageClip(icon_path, duration=1).resize(.9)
+        txt_icon_clip = clips_array([[icon_clip, txt_clip.set_pos("center")]])
+        info_clips.append(txt_icon_clip)
     line_clip = concatenate_videoclips(info_clips)
+    new_size = (line_clip.size[0] + 20, line_clip.size[1] + 20)
+    line_clip = line_clip.on_color(col_opacity=0.0, size=new_size)
     return line_clip
 
 """
