@@ -42,7 +42,7 @@ def generate_info_clip(data, skip_rows, clip_length):
     return speed_clip
 
 def generate_info_text_clip(data, skip_rows, clip_length):
-    speed_text = generate_info_line_clip(data, skip_rows, clip_length, '{:05.1f} Km/h', 'speed', '../data/battery.png')
+    speed_text = generate_info_line_clip(data, skip_rows, clip_length, '{:04.1f} Km/h', 'speed', '../data/battery.png')
     battery_text = generate_info_line_clip(data, skip_rows, clip_length, '{}%', 'battery', '../data/battery.png')
     roll_text = generate_info_line_clip(data, skip_rows, clip_length, '{}', 'roll', '../data/roll.png')
     pitch_text = generate_info_line_clip(data, skip_rows, clip_length, '{}', 'pitch', '../data/pitch.png')
