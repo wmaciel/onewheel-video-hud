@@ -10,23 +10,19 @@ def main(data_path, footage_path):
     skip_rows = 90
     video_seconds = 15
 
-    print 'Generating Footage Clip...',
+    print 'Generating Footage Clip...'
     footage_clip = generate_footage_clip(footage_path, video_seconds)
-    print 'OK'
 
-    print 'Generating Info Clip...',
+    print 'Generating Info Clip...'
     info_clip = generate_info_clip(data, skip_rows, video_seconds)
-    print 'OK'
 
-    print 'Compositing...',
+    print 'Compositing footage and info clips...'
     clip = clips_array([[footage_clip, info_clip.set_pos('center')]])
-    print 'OK'
 
     print 'Rendering...'
     #clip.write_videofile("onewheel.MP4", fps=60)
     #clip.resize(0.5).preview(fps=60, audio=False)
     info_clip.resize(0.5).preview(fps=60, audio=False)
-    print 'OK'
 
 """
 Opens and loads the video clip captured by the Go Pro
@@ -42,12 +38,13 @@ def generate_info_clip(data, skip_rows, clip_length):
     return speed_clip
 
 def generate_info_text_clip(data, skip_rows, clip_length):
-    speed_text = generate_info_line_clip(data, skip_rows, clip_length, '{:04.1f} Km/h', 'speed', '../data/battery.png')
-    battery_text = generate_info_line_clip(data, skip_rows, clip_length, '{}%', 'battery', '../data/battery.png')
-    roll_text = generate_info_line_clip(data, skip_rows, clip_length, '{}', 'roll', '../data/roll.png')
-    pitch_text = generate_info_line_clip(data, skip_rows, clip_length, '{}', 'pitch', '../data/pitch.png')
-    temp_text = generate_info_line_clip(data, skip_rows, clip_length, '{} C', 'motor_temp', '../data/temp.png')
+    speed_text = generate_info_line_clip(data, skip_rows, clip_length, '{: > 4.1f} Km/h', 'speed', '../data/battery.png')
+    battery_text = generate_info_line_clip(data, skip_rows, clip_length, '{: > 4d}%', 'battery', '../data/battery.png')
+    roll_text = generate_info_line_clip(data, skip_rows, clip_length, '{: > 4.1f}', 'roll', '../data/roll.png')
+    pitch_text = generate_info_line_clip(data, skip_rows, clip_length, '{: > 4.1f}', 'pitch', '../data/pitch.png')
+    temp_text = generate_info_line_clip(data, skip_rows, clip_length, '{: > 4.1f} C', 'motor_temp', '../data/temp.png')
     
+    print 'Compositing lines together...'
     info_text_clip = CompositeVideoClip([
         speed_text.on_color(color=[255,255,255], size=(720,1280), pos=('left', 'top')),
         pitch_text.set_position((0.0, 0.2), relative=True),
@@ -60,6 +57,7 @@ def generate_info_text_clip(data, skip_rows, clip_length):
 
 
 def generate_info_line_clip(data, skip_rows, clip_length, text, column_name, icon_path):
+    print 'Generating {} line clip...'.format(column_name)
     info_clips = []
     for i in range(skip_rows, clip_length + skip_rows):
         txt_clip = TextClip(text.format(data[i][column_name]), fontsize=70, color='black').set_duration(1)
