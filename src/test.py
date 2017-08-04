@@ -6,15 +6,15 @@ import sys
 Main function
 """
 def main(data_path, footage_path):
-    data = parse_logs(data_path)
     skip_rows = 90
     video_seconds = 15
+    data = parse_logs(data_path, skip_rows)
 
     print 'Generating Footage Clip...'
     footage_clip = generate_footage_clip(footage_path, video_seconds)
 
     print 'Generating Info Clip...'
-    info_clip = generate_info_clip(data, skip_rows, video_seconds)
+    info_clip = generate_info_clip(data, video_seconds)
 
     print 'Compositing footage and info clips...'
     clip = clips_array([[footage_clip, info_clip.set_pos('center')]])
@@ -33,16 +33,16 @@ def generate_footage_clip(file_path, clip_length):
 """
 Generates the clip that will show the data gathered by the App
 """
-def generate_info_clip(data, skip_rows, clip_length):
-    speed_clip = generate_info_text_clip(data, skip_rows, clip_length)
+def generate_info_clip(data, clip_length):
+    speed_clip = generate_info_text_clip(data, clip_length)
     return speed_clip
 
-def generate_info_text_clip(data, skip_rows, clip_length):
-    speed_text = generate_info_line_clip(data, skip_rows, clip_length, '{: > 4.1f} Km/h', 'speed', '../data/battery.png')
-    battery_text = generate_info_line_clip(data, skip_rows, clip_length, '{: > 4d}%', 'battery', '../data/battery.png')
-    roll_text = generate_info_line_clip(data, skip_rows, clip_length, '{: > 4.1f}', 'roll', '../data/roll.png')
-    pitch_text = generate_info_line_clip(data, skip_rows, clip_length, '{: > 4.1f}', 'pitch', '../data/pitch.png')
-    temp_text = generate_info_line_clip(data, skip_rows, clip_length, '{: > 4.1f} C', 'motor_temp', '../data/temp.png')
+def generate_info_text_clip(data, clip_length):
+    speed_text = generate_info_line_clip(data, clip_length, '{: > 4.1f} Km/h', 'speed', '../data/battery.png')
+    battery_text = generate_info_line_clip(data, clip_length, '{: > 4d}%', 'battery', '../data/battery.png')
+    roll_text = generate_info_line_clip(data, clip_length, '{: > 4.1f}', 'roll', '../data/roll.png')
+    pitch_text = generate_info_line_clip(data, clip_length, '{: > 4.1f}', 'pitch', '../data/pitch.png')
+    temp_text = generate_info_line_clip(data, clip_length, '{: > 4.1f} C', 'motor_temp', '../data/temp.png')
     
     print 'Compositing lines together...'
     info_text_clip = CompositeVideoClip([
@@ -56,10 +56,10 @@ def generate_info_text_clip(data, skip_rows, clip_length):
     return info_text_clip
 
 
-def generate_info_line_clip(data, skip_rows, clip_length, text, column_name, icon_path):
+def generate_info_line_clip(data, clip_length, text, column_name, icon_path):
     print 'Generating {} line clip...'.format(column_name)
     info_clips = []
-    for i in range(skip_rows, clip_length + skip_rows):
+    for i in range(clip_length):
         txt_clip = TextClip(text.format(data[i][column_name]), fontsize=70, color='black').set_duration(1)
         icon_clip = ImageClip(icon_path, duration=1).resize(.9)
         txt_icon_clip = clips_array([[icon_clip, txt_clip.set_pos("center")]])
@@ -96,7 +96,7 @@ def parse_angle(angle_text):
 """
 Parses the log files and creates a list of dicts
 """
-def parse_logs(file_path):
+def parse_logs(file_path, skip_rows):
     print 'Loading log file ', file_path, '...'
     data = []
     with open(file_path) as logfile:
@@ -111,7 +111,7 @@ def parse_logs(file_path):
                 'motor_temp':f_to_c(row['motor_temp'])
                 })
     print 'Loaded ', len(data), 'rows'
-    return data
+    return data[skip_rows:]
 
 if __name__ == '__main__':
     if len(sys.argv) != 3:
