@@ -39,8 +39,8 @@ def generate_footage_clip(file_path, resolution, clip_length):
 Generates the clip that will show the data gathered by the App
 """
 def generate_info_clip(data, resolution, clip_length):
-    speed_clip = generate_info_text_clip(data, resolution, clip_length)
-    return speed_clip
+    info_clip = generate_info_text_clip(data, resolution, clip_length)
+    return info_clip
 
 def generate_info_text_clip(data, resolution, clip_length):
     speed_text = generate_info_line_clip(data, resolution, clip_length, '{: > 4.1f} Km/h', 'speed', '../data/speed.png')
@@ -48,7 +48,7 @@ def generate_info_text_clip(data, resolution, clip_length):
     roll_text = generate_info_line_clip(data, resolution, clip_length, '{: > 4.1f}', 'roll', '../data/roll.png')
     pitch_text = generate_info_line_clip(data, resolution, clip_length, '{: > 4.1f}', 'pitch', '../data/pitch.png')
     temp_text = generate_info_line_clip(data, resolution, clip_length, '{: > 4.1f} C', 'motor_temp', '../data/temp.png')
-    
+
     print 'Compositing lines together...'
     info_text_clip = CompositeVideoClip([
         speed_text.on_color(color=[255,255,255], size=(720,1280), pos=('left', 'top')),
