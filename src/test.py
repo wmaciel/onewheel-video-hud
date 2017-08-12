@@ -16,7 +16,7 @@ def main(data_path, footage_path):
     footage_clip = generate_footage_clip(footage_path, footage_clip_res, video_seconds)
 
     print 'Generating Info Clip...'
-    info_clip = generate_info_clip(data, video_seconds)
+    info_clip = generate_info_clip(data, info_clip_res, video_seconds)
 
     print 'Compositing footage and info clips...'
     clip = clips_array([[footage_clip, info_clip.set_pos('center')]])
