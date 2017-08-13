@@ -26,7 +26,7 @@ def main(data_path, footage_path):
     print 'Rendering...'
     #clip.write_videofile("onewheel.MP4", fps=60)
     #clip.resize(0.5).preview(fps=60, audio=False)
-    info_clip.resize(0.5).preview(fps=60, audio=False)
+    info_clip.preview(fps=60, audio=False)
 
 """
 Opens and loads the video clip captured by the Go Pro
@@ -59,6 +59,9 @@ def generate_info_clip(data, resolution, clip_length):
         [battery_text],
         [temp_text]
     ])
+
+    bg_clip = TextClip(' ', size=resolution, bg_color='white').set_duration(clip_length)
+    info_text_clip = CompositeVideoClip([bg_clip, info_text_clip])
 
     return info_text_clip
 
@@ -141,5 +144,5 @@ if __name__ == '__main__':
         print 'Wrong number of arguments.'
         print 'Usage: python test.py <data_path> <footage_path>'
         exit(1)
-        
+
     main(sys.argv[1], sys.argv[2])
