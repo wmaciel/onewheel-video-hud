@@ -90,8 +90,12 @@ def generate_info_text_clip(text, resolution, clip_length, padding):
     return txt_clip
 
 def generate_info_icon_clip(data, resolution, clip_length, icon_path, padding):
+    mask_clip = (ImageClip('../data/mask.png', duration=clip_length, ismask=True)
+                 .resize((resolution[0] - padding, resolution[1] - padding)))
     icon_clip = (ImageClip(icon_path, duration=clip_length)
                  .resize((resolution[0] - padding, resolution[1] - padding))
+                 .rotate(float(data), expand=False)
+                 .set_mask(mask_clip)
                  .on_color(col_opacity=0, size=resolution, pos=('center')))
     return icon_clip
 
