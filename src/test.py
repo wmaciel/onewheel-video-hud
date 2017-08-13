@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from moviepy.editor import *
 import csv
 import sys
@@ -10,7 +12,7 @@ def main(data_path, footage_path):
     video_seconds = 15
     data = parse_logs(data_path, skip_rows)
     footage_clip_res = (720, 1280)
-    info_clip_res = (720, 128)
+    info_clip_res = (720, 1280)
 
     print 'Generating Footage Clip...'
     footage_clip = generate_footage_clip(footage_path, footage_clip_res, video_seconds)
@@ -39,40 +41,56 @@ def generate_footage_clip(file_path, resolution, clip_length):
 Generates the clip that will show the data gathered by the App
 """
 def generate_info_clip(data, resolution, clip_length):
-    info_clip = generate_info_text_clip(data, resolution, clip_length)
-    return info_clip
+    n_info_lines = 5
+    info_line_resolution = (resolution[0], resolution[1]/n_info_lines)
+    print "Generating {} info lines with resolution {}".format(n_info_lines, info_line_resolution)
 
-def generate_info_text_clip(data, resolution, clip_length):
-    speed_text = generate_info_line_clip(data, resolution, clip_length, '{: > 4.1f} Km/h', 'speed', '../data/speed.png')
-    battery_text = generate_info_line_clip(data, resolution, clip_length, '{: > 4d}%', 'battery', '../data/battery.png')
-    roll_text = generate_info_line_clip(data, resolution, clip_length, '{: > 4.1f}', 'roll', '../data/roll.png')
-    pitch_text = generate_info_line_clip(data, resolution, clip_length, '{: > 4.1f}', 'pitch', '../data/pitch.png')
-    temp_text = generate_info_line_clip(data, resolution, clip_length, '{: > 4.1f} C', 'motor_temp', '../data/temp.png')
+    speed_text = generate_info_line_clip(data, info_line_resolution, clip_length, '{:>5.1f} Km/h', 'speed', '../data/speed.png')
+    battery_text = generate_info_line_clip(data, info_line_resolution, clip_length, '{:>3d}%', 'battery', '../data/battery.png')
+    roll_text = generate_info_line_clip(data, info_line_resolution, clip_length, '{:>5.1f}°', 'roll', '../data/roll.png')
+    pitch_text = generate_info_line_clip(data, info_line_resolution, clip_length, '{:>5.1f}°', 'pitch', '../data/pitch.png')
+    temp_text = generate_info_line_clip(data, info_line_resolution, clip_length, '{:>5.1f} C', 'motor_temp', '../data/temp.png')
 
     print 'Compositing lines together...'
-    info_text_clip = CompositeVideoClip([
-        speed_text.on_color(color=[255,255,255], size=(720,1280), pos=('left', 'top')),
-        pitch_text.set_position((0.0, 0.2), relative=True),
-        roll_text.set_position((0.0, 0.4), relative=True),
-        battery_text.set_position((0.0, 0.6), relative=True),
-        temp_text.set_position((0.0, 0.8), relative=True)
+    info_text_clip = clips_array([
+        [speed_text],
+        [pitch_text],
+        [roll_text],
+        [battery_text],
+        [temp_text]
     ])
 
     return info_text_clip
 
-
 def generate_info_line_clip(data,  resolution, clip_length, text, column_name, icon_path):
-    print 'Generating {} line clip...'.format(column_name)
+    print 'Generating {} info line clip. {}'.format(column_name, resolution)
     info_clips = []
     for i in range(clip_length):
-        txt_clip = TextClip(text.format(data[i][column_name]), fontsize=70, color='black').set_duration(1)
-        icon_clip = ImageClip(icon_path, duration=1).resize(.9)
+        data_str = data[i][column_name]
+
+        icon_resolution = (resolution[1], resolution[1])
+        icon_clip = generate_info_icon_clip(data_str, icon_resolution, 1, icon_path, 10)
+
+        txt_resolution = (resolution[0] - icon_resolution[0], resolution[1])
+        txt_clip = generate_info_text_clip(text.format(data_str), txt_resolution, 1, 100)
+
         txt_icon_clip = clips_array([[icon_clip, txt_clip.set_pos("center")]])
         info_clips.append(txt_icon_clip)
+
     line_clip = concatenate_videoclips(info_clips)
-    new_size = (line_clip.size[0] + 20, line_clip.size[1] + 20)
-    line_clip = line_clip.on_color(col_opacity=0.0, size=new_size)
     return line_clip
+
+def generate_info_text_clip(text, resolution, clip_length, padding):
+    txt_clip = (TextClip(text, fontsize=70, color='blue', font='Consolas')
+                .set_duration(clip_length)
+                .on_color(col_opacity=0, size=resolution, pos=('left', 'center')))
+    return txt_clip
+
+def generate_info_icon_clip(data, resolution, clip_length, icon_path, padding):
+    icon_clip = (ImageClip(icon_path, duration=clip_length)
+                 .resize((resolution[0] - padding, resolution[1] - padding))
+                 .on_color(col_opacity=0, size=resolution, pos=('center')))
+    return icon_clip
 
 """
 Converts Miles to Kilometers
@@ -123,5 +141,5 @@ if __name__ == '__main__':
         print 'Wrong number of arguments.'
         print 'Usage: python test.py <data_path> <footage_path>'
         exit(1)
-
+        
     main(sys.argv[1], sys.argv[2])
