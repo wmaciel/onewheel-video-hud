@@ -72,7 +72,11 @@ def generate_info_line_clip(data,  resolution, clip_length, text, column_name, i
         data_str = data[i][column_name]
 
         icon_resolution = (resolution[1], resolution[1])
-        icon_clip = generate_info_icon_clip(data_str, icon_resolution, 1, icon_path, 10)
+        icon_clip = None
+        if column_name == 'pitch' or column_name == 'roll':
+            icon_clip = generate_rotating_icon_clip(data_str, icon_resolution, 1, icon_path, 10)
+        else:
+            icon_clip = generate_info_icon_clip(data_str, icon_resolution, 1, icon_path, 10)
 
         txt_resolution = (resolution[0] - icon_resolution[0], resolution[1])
         txt_clip = generate_info_text_clip(text.format(data_str), txt_resolution, 1, 100)
@@ -95,6 +99,16 @@ def generate_info_icon_clip(data, resolution, clip_length, icon_path, padding):
     icon_clip = (ImageClip(icon_path, duration=clip_length)
                  .resize((resolution[0] - padding, resolution[1] - padding))
                  .rotate(float(data), expand=False)
+                 .set_mask(mask_clip)
+                 .on_color(col_opacity=0, size=resolution, pos=('center')))
+    return icon_clip
+
+def generate_rotating_icon_clip(data, resolution, clip_length, icon_path, padding):
+    mask_clip = (ImageClip('../data/mask.png', duration=clip_length, ismask=True)
+                 .resize((resolution[0] - padding, resolution[1] - padding)))
+    icon_clip = (ImageClip(icon_path, duration=clip_length)
+                 .resize((resolution[0] - padding, resolution[1] - padding))
+                 .rotate(-float(data), expand=False)
                  .set_mask(mask_clip)
                  .on_color(col_opacity=0, size=resolution, pos=('center')))
     return icon_clip
