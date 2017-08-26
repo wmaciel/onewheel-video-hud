@@ -4,6 +4,64 @@ from moviepy.editor import *
 import csv
 import sys
 
+icon_manager = 'icon_manager is not initialized'
+
+class IconManager:
+    def __init__(self, resolution=(30,30), length=1.0, padding=10):
+        self.resolution = resolution
+        self.length = length
+        self.padding = padding
+        self.icon_size = tuple(map(lambda x: x - padding, resolution))
+        self.pitch_icon_clip = None
+        self.roll_icon_clip = None
+        self.battery_icon_clip = None
+        self.speed_icon_clip = None
+        self.temp_icon_clip = None
+
+    def get_roll_icon_clip(self, angle=0.0):
+        icon_path = '../data/roll.png'
+        if self.roll_icon_clip is None:
+            self.roll_icon_clip = (ImageClip(icon_path, duration=self.length)
+                .resize(self.icon_size))
+
+        return (self.roll_icon_clip
+                .rotate(float(angle), expand=False)
+                .on_color(col_opacity=0, size=self.resolution, pos=('center')))
+
+    def get_pitch_icon_clip(self, angle=0.0):
+        icon_path = '../data/pitch.png'
+        if self.pitch_icon_clip is None:
+            self.pitch_icon_clip = (ImageClip(icon_path, duration=self.length)
+                .resize(self.icon_size))
+
+        return (self.pitch_icon_clip
+                .rotate(-float(angle), expand=False)
+                .on_color(col_opacity=0, size=self.resolution, pos=('center')))
+
+    def get_battery_icon_clip(self):
+        icon_path = '../data/battery.png'
+        if self.battery_icon_clip is None:
+            self.battery_icon_clip = (ImageClip(icon_path, duration=self.length)
+                .resize(self.icon_size)
+                .on_color(col_opacity=0, size=self.resolution, pos=('center')))
+        return self.battery_icon_clip
+
+    def get_speed_icon_clip(self):
+        icon_path = '../data/speed.png'
+        if self.speed_icon_clip is None:
+            self.speed_icon_clip = (ImageClip(icon_path, duration=self.length)
+                .resize(self.icon_size)
+                .on_color(col_opacity=0, size=self.resolution, pos=('center')))
+        return self.speed_icon_clip
+
+    def get_temperature_icon_clip(self):
+        icon_path = '../data/temp.png'
+        if self.temp_icon_clip is None:
+            self.temp_icon_clip = (ImageClip(icon_path, duration=self.length)
+                .resize(self.icon_size)
+                .on_color(col_opacity=0, size=self.resolution, pos=('center')))
+        return self.temp_icon_clip
+
 """
 Main function
 """
@@ -12,7 +70,13 @@ def main(data_path, footage_path):
     video_seconds = 15
     data = parse_logs(data_path, skip_rows)
     footage_clip_res = (720, 1280)
-    info_clip_res = (720, 1280)
+    info_clip_res = (720, 1280) # half of the video
+    info_line_res = (720, 256) # 5 lines
+    icon_res = (256, 256) # biggest square possible
+
+    print 'Creating icon manager...'
+    global icon_manager
+    icon_manager = IconManager(resolution=icon_res)
 
     print 'Generating Footage Clip...'
     footage_clip = generate_footage_clip(footage_path, footage_clip_res, video_seconds)
@@ -26,7 +90,7 @@ def main(data_path, footage_path):
     print 'Rendering...'
     #clip.write_videofile("onewheel.MP4", fps=60)
     #clip.resize(0.5).preview(fps=60, audio=False)
-    info_clip.preview(fps=60, audio=False)
+    info_clip.resize(0.5).preview(fps=60, audio=False)
 
 """
 Opens and loads the video clip captured by the Go Pro
@@ -68,15 +132,17 @@ def generate_info_clip(data, resolution, clip_length):
 def generate_info_line_clip(data,  resolution, clip_length, text, column_name, icon_path):
     print 'Generating {} info line clip. {}'.format(column_name, resolution)
     info_clips = []
+    global icon_manager
+    icon_resolution=(resolution[1], resolution[1])
     for i in range(clip_length):
         data_str = data[i][column_name]
-
-        icon_resolution = (resolution[1], resolution[1])
-        icon_clip = None
-        if column_name == 'pitch' or column_name == 'roll':
-            icon_clip = generate_rotating_icon_clip(data_str, icon_resolution, 1, icon_path, 10)
-        else:
-            icon_clip = generate_info_icon_clip(data_str, icon_resolution, 1, icon_path, 10)
+        icon_clip = {
+            'pitch': icon_manager.get_pitch_icon_clip(angle=float(data_str)),
+            'roll': icon_manager.get_roll_icon_clip(angle=float(data_str)),
+            'speed': icon_manager.get_speed_icon_clip(),
+            'battery': icon_manager.get_battery_icon_clip(),
+            'motor_temp': icon_manager.get_temperature_icon_clip()
+        }[column_name]
 
         txt_resolution = (resolution[0] - icon_resolution[0], resolution[1])
         txt_clip = generate_info_text_clip(text.format(data_str), txt_resolution, 1, 100)
@@ -92,26 +158,6 @@ def generate_info_text_clip(text, resolution, clip_length, padding):
                 .set_duration(clip_length)
                 .on_color(col_opacity=0, size=resolution, pos=('left', 'center')))
     return txt_clip
-
-def generate_info_icon_clip(data, resolution, clip_length, icon_path, padding):
-    mask_clip = (ImageClip('../data/mask.png', duration=clip_length, ismask=True)
-                 .resize((resolution[0] - padding, resolution[1] - padding)))
-    icon_clip = (ImageClip(icon_path, duration=clip_length)
-                 .resize((resolution[0] - padding, resolution[1] - padding))
-                 .rotate(float(data), expand=False)
-                 .set_mask(mask_clip)
-                 .on_color(col_opacity=0, size=resolution, pos=('center')))
-    return icon_clip
-
-def generate_rotating_icon_clip(data, resolution, clip_length, icon_path, padding):
-    mask_clip = (ImageClip('../data/mask.png', duration=clip_length, ismask=True)
-                 .resize((resolution[0] - padding, resolution[1] - padding)))
-    icon_clip = (ImageClip(icon_path, duration=clip_length)
-                 .resize((resolution[0] - padding, resolution[1] - padding))
-                 .rotate(-float(data), expand=False)
-                 .set_mask(mask_clip)
-                 .on_color(col_opacity=0, size=resolution, pos=('center')))
-    return icon_clip
 
 """
 Converts Miles to Kilometers
