@@ -48,11 +48,11 @@ class OnewheelHudVideo:
         }
 
         for row in self.data:
-            icon_clips['speed'].append(self.icon_manager.get_speed_icon_clip())
-            icon_clips['pitch'].append(self.icon_manager.get_pitch_icon_clip())
-            icon_clips['roll'].append(self.icon_manager.get_roll_icon_clip())
-            icon_clips['battery'].append(self.icon_manager.get_battery_icon_clip())
-            icon_clips['temperature'].append(self.icon_manager.get_temperature_icon_clip())
+            icon_clips['speed'].append(self.icon_manager.get_speed_icon_clip(speed=row['speed']))
+            icon_clips['pitch'].append(self.icon_manager.get_pitch_icon_clip(angle=row['pitch']))
+            icon_clips['roll'].append(self.icon_manager.get_roll_icon_clip(angle=row['roll']))
+            icon_clips['battery'].append(self.icon_manager.get_battery_icon_clip(charge=row['battery']))
+            icon_clips['temperature'].append(self.icon_manager.get_temperature_icon_clip(temperature=row['motor_temp']))
 
         info_clip = self.combine_info_clips(icon_clips)
         return info_clip
