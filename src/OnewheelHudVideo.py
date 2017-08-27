@@ -21,7 +21,7 @@ class OnewheelHudVideo:
         self.resolutions = self.compute_resolutions(orientation, resolution)
         self.length = length
         self.icon_manager = IconManager(resolution=res_2_tuple(self.resolutions['icon']))
-        self.data = parse_logs(data_path)
+        self.data = parse_logs(data_path)[:length]
 
         print 'Footage is comming from', self.footage_path
         print 'Footage orientation is', self.orientation
@@ -47,13 +47,16 @@ class OnewheelHudVideo:
             'temperature': []
         }
 
-        for row in self.data:
+        print 'Getting icons...'
+        for i, row in enumerate(self.data):
+            print "{:>0.2f}%".format(100.0 * float(i+1) / len(self.data))
             icon_clips['speed'].append(self.icon_manager.get_speed_icon_clip(speed=row['speed']))
             icon_clips['pitch'].append(self.icon_manager.get_pitch_icon_clip(angle=row['pitch']))
             icon_clips['roll'].append(self.icon_manager.get_roll_icon_clip(angle=row['roll']))
             icon_clips['battery'].append(self.icon_manager.get_battery_icon_clip(charge=row['battery']))
             icon_clips['temperature'].append(self.icon_manager.get_temperature_icon_clip(temperature=row['motor_temp']))
 
+        print 'Combining icons...'
         info_clip = self.combine_info_clips(icon_clips)
         return info_clip
 
