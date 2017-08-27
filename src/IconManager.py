@@ -14,6 +14,8 @@ class IconManager:
         self.temp_icon_clip = None
 
     def get_roll_icon_clip(self, angle=0.0):
+        if angle is None:
+            angle = 0.0
         icon_path = '../data/roll.png'
         if self.roll_icon_clip is None:
             self.roll_icon_clip = (ImageClip(icon_path, duration=self.length)
@@ -24,6 +26,8 @@ class IconManager:
                 .on_color(col_opacity=0, size=self.resolution, pos=('center')))
 
     def get_pitch_icon_clip(self, angle=0.0):
+        if angle is None:
+            angle = 0.0
         icon_path = '../data/pitch.png'
         if self.pitch_icon_clip is None:
             self.pitch_icon_clip = (ImageClip(icon_path, duration=self.length)
@@ -34,6 +38,8 @@ class IconManager:
                 .on_color(col_opacity=0, size=self.resolution, pos=('center')))
 
     def get_battery_icon_clip(self, charge=0):
+        if charge is None:
+            charge = 0.0
         icon_path = '../data/battery.png'
         if self.battery_icon_clip is None:
             self.battery_icon_clip = (ImageClip(icon_path, duration=self.length)
@@ -42,6 +48,8 @@ class IconManager:
         return self.battery_icon_clip
 
     def get_speed_icon_clip(self, speed=0.0):
+        if speed is None:
+            speed = 0.0
         icon_path = '../data/speed.png'
         if self.speed_icon_clip is None:
             self.speed_icon_clip = (ImageClip(icon_path, duration=self.length)
@@ -50,6 +58,8 @@ class IconManager:
         return self.speed_icon_clip
 
     def get_temperature_icon_clip(self, temperature=0.0):
+        if temperature is None:
+            temperature = 0.0
         icon_path = '../data/temp.png'
         if self.temp_icon_clip is None:
             self.temp_icon_clip = (ImageClip(icon_path, duration=self.length)
