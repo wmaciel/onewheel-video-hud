@@ -16,7 +16,6 @@ resolution_map = {
 
 class OnewheelHudVideo:
     def __init__(self, data_path, footage_path, orientation='portrait', resolution='1080', length=None):
-        self.data_path = data_path
         self.footage_path = footage_path
         self.orientation = orientation
         self.resolutions = self.compute_resolutions(orientation, resolution)
@@ -24,7 +23,6 @@ class OnewheelHudVideo:
         self.icon_manager = IconManager(resolution=res_2_tuple(self.resolutions['icon']))
         self.data = parse_logs(data_path)
 
-        print 'Data is comming from', self.data_path
         print 'Footage is comming from', self.footage_path
         print 'Footage orientation is', self.orientation
         print 'Resolutions are:'
