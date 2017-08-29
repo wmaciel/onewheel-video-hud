@@ -3,7 +3,7 @@
 from moviepy.editor import *
 import csv
 import sys
-
+from datetime import datetime
 icon_manager = 'icon_manager is not initialized'
 
 
@@ -139,7 +139,7 @@ def parse_logs(file_path, skip_rows=0):
         log_reader = csv.DictReader(logfile)
         for row in log_reader:
             data.append({
-                'time':row['time'],
+                'time':parse_milisecond_time(row['time']),
                 'speed':mile2Km(row['speed']),
                 'battery':int(row['battery']),
                 'roll':parse_angle(row['tilt_angle_roll']),
@@ -149,6 +149,29 @@ def parse_logs(file_path, skip_rows=0):
     print 'Loaded ', len(data), 'rows'
     return data[skip_rows:]
 
+def parse_original_time(time_str):
+    # remove timezone info
+    time_str = time_str[:-5]
+    return datetime.strptime(time_str, '%Y-%m-%dT%H:%M:%S')
+
+def parse_milisecond_time(time_str): # "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+    # remove timezone info
+    time_str = time_str[:-5]
+    return datetime.strptime(time_str, '%Y-%m-%dT%H:%M:%S.%f')
+
+def test_data(data):
+    deltas=[]
+    for i, row in enumerate(data):
+        if i+1 < len(data):
+            delta_t = data[i+1]['time'] - row['time']
+            delta_seconds = delta_t.seconds + delta_t.microseconds * 1e-6
+            deltas.append(delta_seconds)
+    print len(deltas)
+    print max(deltas)
+    print min(deltas)
+    print sum(deltas)/len(deltas)
+    print sorted(deltas)
+
 if __name__ == '__main__':
     if len(sys.argv) != 3:
         print 'Wrong number of arguments.'
@@ -156,7 +179,6 @@ if __name__ == '__main__':
         exit(1)
 
     from OnewheelHudVideo import OnewheelHudVideo
-    onewheel_video = OnewheelHudVideo(sys.argv[1], sys.argv[2], length=20)
+    onewheel_video = OnewheelHudVideo(sys.argv[1], sys.argv[2])
     onewheel_video.render()
-
-    #main(sys.argv[1], sys.argv[2])
+    #test_data(parse_logs(sys.argv[1]))
