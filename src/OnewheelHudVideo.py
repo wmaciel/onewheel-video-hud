@@ -3,6 +3,7 @@ from moviepy.editor import *
 from IconManager import IconManager
 import csv
 from datetime import datetime
+import tqdm
 
 resolution_map = {
     '1080': {
@@ -16,14 +17,16 @@ resolution_map = {
 }
 
 class OnewheelHudVideo:
-    def __init__(self, data_path, footage_path, orientation='portrait', resolution='1080', start_second=0, skip_rows=0, length=None):
+    def __init__(self, data_path, footage_path, orientation='portrait', resolution='1080', start_second=0, skip_rows=0, length=None, show_time=False):
         self.footage_path = footage_path
         self.orientation = orientation
         self.resolutions = self.compute_resolutions(orientation, resolution)
+        self.start_second = start_second
         self.length = length
         self.icon_manager = IconManager(resolution=res_2_tuple(self.resolutions['icon']))
         self.data = parse_logs(data_path, skip_rows=skip_rows)
         self.avg_log_delay = compute_average_delta_t(self.data)
+        self.show_time = show_time
 
         print 'Footage is comming from', self.footage_path
         print 'Footage orientation is', self.orientation
@@ -33,17 +36,25 @@ class OnewheelHudVideo:
 
     def render(self):
         print 'Generating footage clip...'
-        footage_clip = self.generate_footage_clip().subclip(t_start=start_second)
+        footage_clip = self.generate_footage_clip().subclip(t_start=self.start_second)
+
         print 'Generating info clip...'
         info_clip = self.generate_info_clip()
-        #print 'Generating time clip...'
-        #time_clip = self.generate_time_clip()
+
         print 'Generating final clip...'
         final_clip = CompositeVideoClip([footage_clip, info_clip.set_position('bottom', 'center')])
-        #final_clip = CompositeVideoClip([footage_clip, info_clip.set_position('bottom', 'center'), time_clip.set_position('top', 'center')])
+
+        if self.show_time:
+            print 'Generating time clip...'
+            time_clip = self.generate_time_clip()
+            final_clip = CompositeVideoClip([final_clip, time_clip.set_position('top', 'center')])
+
+        if self.length is not None:
+            final_clip = final_clip.subclip(t_end=self.length)
+
         print 'Rendering...'
         #final_clip.save_frame('frame.png', t=0)
-        #final_clip.resize(0.4).preview(fps=60, audio=False)
+        #final_clip.resize(0.4).preview(fps=15, audio=False)
         final_clip.write_videofile("onewheel.MP4", fps=60, threads=8)
         #info_clip.preview(fps=60, audio=False)
 
@@ -57,8 +68,7 @@ class OnewheelHudVideo:
         }
 
         print 'Getting icons...'
-        for i, row in enumerate(self.data):
-            print "{:>0.2f}%".format(100.0 * float(i+1) / len(self.data))
+        for row in tqdm.tqdm(self.data):
             delta_seconds = self.avg_log_delay
             icon_clips['speed'].append(self.icon_manager.get_speed_icon_clip(speed=row['speed'], duration=delta_seconds))
             icon_clips['pitch'].append(self.icon_manager.get_pitch_icon_clip(angle=row['pitch'], duration=delta_seconds))
@@ -71,7 +81,7 @@ class OnewheelHudVideo:
 
     def generate_time_clip(self):
         time_clips = []
-        for row in self.data:
+        for row in tqdm.tqdm(self.data[:300]):
             time_str = '{}'.format(row['time'])
             time_clips.append(TextClip(time_str, fontsize=64, color='red').set_duration(self.avg_log_delay))
         return concatenate_videoclips(time_clips)
@@ -109,8 +119,8 @@ class OnewheelHudVideo:
         footage_clip = (VideoFileClip(self.footage_path)
             .resize(res_2_tuple(self.resolutions['footage'])))
 
-        if self.length is not None:
-            footage_clip = footage_clip.subclip(t_end=self.length)
+        # if self.length is not None:
+        #     footage_clip = footage_clip.subclip(t_end=self.length)
 
         if self.orientation == 'portrait':
             footage_clip = footage_clip.rotate(-90)
