@@ -76,7 +76,7 @@ class IconManager:
         # rotate it as needed
         rotated_icon_clip = (self.pitch_icon_clip
                 .rotate(-float(angle), expand=False)
-                .on_color(col_opacity=0, size=self.resolution, pos=('center')))
+                .resize(self.resolution))
 
         # generate a new text to go with the icon
         angle_txt_clip = TextClip(angle_str, fontsize=self.fontsize, font=self.font).set_duration(duration)
