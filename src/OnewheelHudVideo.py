@@ -55,8 +55,9 @@ class OnewheelHudVideo:
         print 'Rendering...'
         #final_clip.save_frame('frame.png', t=0)
         #final_clip.resize(0.4).preview(fps=15, audio=False)
-        final_clip.write_videofile("onewheel.MP4", fps=60, threads=8)
+        #final_clip.write_videofile("onewheel.MP4", fps=60, threads=8)
         #info_clip.preview(fps=60, audio=False)
+        info_clip.write_videofile('info.MP4', fps=30, threads=8)
 
     def generate_info_clip(self):
         icon_clips = {
@@ -68,8 +69,13 @@ class OnewheelHudVideo:
         }
 
         print 'Getting icons...'
+        i = -1
         for row in tqdm.tqdm(self.data):
-            delta_seconds = self.avg_log_delay
+            if i < len(self.data) - 2:
+                i += 1
+            delta_t = self.data[i+1]['time'] - row['time']
+            delta_seconds = delta_t.seconds + delta_t.microseconds * 1e-6
+
             icon_clips['speed'].append(self.icon_manager.get_speed_icon_clip(speed=row['speed'], duration=delta_seconds))
             icon_clips['pitch'].append(self.icon_manager.get_pitch_icon_clip(angle=row['pitch'], duration=delta_seconds))
             icon_clips['roll'].append(self.icon_manager.get_roll_icon_clip(angle=row['roll'], duration=delta_seconds))
