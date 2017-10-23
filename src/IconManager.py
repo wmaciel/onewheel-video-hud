@@ -71,7 +71,8 @@ class IconManager:
         if self.pitch_icon_clip is None:
             icon_path = '../data/pitch.png'
             self.pitch_icon_clip = (ImageClip(icon_path, duration=duration)
-                .resize(self.icon_size))
+                .resize(self.icon_size)
+                .on_color(col_opacity=0, size=self.resolution, pos=('center')))
 
         # rotate it as needed
         rotated_icon_clip = (self.pitch_icon_clip
