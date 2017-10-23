@@ -73,8 +73,7 @@ class OnewheelHudVideo:
         for row in tqdm.tqdm(self.data):
             if i < len(self.data) - 2:
                 i += 1
-            delta_t = self.data[i+1]['time'] - row['time']
-            delta_seconds = delta_t.seconds + delta_t.microseconds * 1e-6
+            delta_seconds = self.compute_log_delay(i)
 
             icon_clips['speed'].append(self.icon_manager.get_speed_icon_clip(speed=row['speed'], duration=delta_seconds))
             icon_clips['pitch'].append(self.icon_manager.get_pitch_icon_clip(angle=row['pitch'], duration=delta_seconds))
@@ -84,6 +83,11 @@ class OnewheelHudVideo:
         print 'Combining icons...'
         info_clip = self.combine_info_clips(icon_clips)
         return info_clip
+
+    def compute_log_delay(self, i):
+        delta_t = self.data[i+1]['time'] - self.data[i]['time']
+        delta_seconds = delta_t.seconds + delta_t.microseconds * 1e-6
+        return delta_seconds
 
     def generate_time_clip(self):
         time_clips = []
