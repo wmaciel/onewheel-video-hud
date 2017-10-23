@@ -172,12 +172,15 @@ def f_to_c(f_temp):
     except ValueError:
         return None
 
-def parse_angle(angle_text):
+def parse_angle(angle_text, invert=False):
     """
     Converts the original angle to values between -180 and 180, with 0 being horizontal
     """
     try:
-        return float(angle_text)/10 - 180
+        angle = float(angle_text)/10 - 180
+        if invert:
+            angle = -angle
+        return angle
     except ValueError:
         return None
 
@@ -194,7 +197,7 @@ def parse_logs(file_path, skip_rows=0):
                 'time':parse_milisecond_time(row['time']),
                 'speed':mile2Km(row['speed']),
                 'battery':int(row['battery']),
-                'roll':parse_angle(row['tilt_angle_roll']),
+                'roll':parse_angle(row['tilt_angle_roll'], invert=True),
                 'pitch':parse_angle(row['tilt_angle_pitch']),
                 'motor_temp':f_to_c(row['motor_temp'])
                 })
