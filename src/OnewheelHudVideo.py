@@ -233,3 +233,12 @@ def res_2_tuple(resolution):
     Converts a resolution map to a tuple
     """
     return (resolution['h'], resolution['w'])
+
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser(description='Generates a HUD video of your onewheel ride from a log file')
+    parser.add_argument('log_file', type=str, help='Path to the logfile used to annotate the video')
+    parser.add_argument('video_file', type=str, help='Path to the video to be annotated')
+    args = parser.parse_args()
+    onewheel_video = OnewheelHudVideo(args.log_file, args.video_file)
+    onewheel_video.render()
