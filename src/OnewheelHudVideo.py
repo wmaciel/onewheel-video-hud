@@ -32,7 +32,7 @@ class OnewheelHudVideo:
         self.avg_log_delay = compute_average_delta_t(self.data)
         self.show_time = show_time
 
-        print 'Footage is comming from', self.footage_path
+        print 'Footage is coming from', self.footage_path
         print 'Footage orientation is', self.orientation
         print 'Resolutions are:'
         print self.resolutions
@@ -57,11 +57,9 @@ class OnewheelHudVideo:
             final_clip = final_clip.subclip(t_end=self.length)
 
         print 'Rendering...'
-        # final_clip.save_frame('frame.png', t=0)
-        # final_clip.resize(0.4).preview(fps=15, audio=False)
-        # final_clip.write_videofile("onewheel.MP4", fps=60, threads=8)
-        # info_clip.preview(fps=60, audio=False)
-        info_clip.write_videofile('info.MP4', fps=30, threads=8)
+        final_clip.write_videofile("onewheel.MP4", fps=60, threads=8)
+        # final_clip.preview(fps=60, audio=False)
+        # final_clip.save_frame(filename="frame.png", t=10.669)
 
     def generate_info_clip(self):
         icon_clips = {
@@ -160,7 +158,7 @@ def compute_resolutions(orientation, resolution_name):
             'w': resolution['w'] / float(n_icons),
             'h': resolution['w'] / float(n_icons)
         }
-    # in landscape, the icons will be layed along the right edge
+    # in landscape, the icons will be laid along the right edge
     else:  # orientation == landscape
         resolutions['icon'] = {
             'w': resolution['h'] / float(n_icons),
@@ -257,6 +255,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generates a HUD video of your onewheel ride from a log file')
     parser.add_argument('log_file', type=str, help='Path to the logfile used to annotate the video')
     parser.add_argument('video_file', type=str, help='Path to the video to be annotated')
+    parser.add_argument('--skip-second', type=float, help='How many seconds to skip from the beginning of the '
+                                                          'original video')
+    parser.add_argument('--skip-row', type=int, help='How many rows to skip from the beginning of the log file')
     args = parser.parse_args()
-    onewheel_video = OnewheelHudVideo(args.log_file, args.video_file)
+    onewheel_video = OnewheelHudVideo(args.log_file,
+                                      args.video_file,
+                                      start_second=args.skip_second,
+                                      skip_rows=args.skip_row)
     onewheel_video.render()

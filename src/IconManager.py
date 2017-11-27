@@ -39,6 +39,8 @@ class IconManager:
             icon_path = '../data/roll.png'
             self.roll_icon_clip = (ImageClip(icon_path, duration=duration)
                 .resize(self.icon_size))
+        else:
+            self.roll_icon_clip = self.roll_icon_clip.set_duration(duration)
 
         # rotate it as needed
         rotated_icon_clip = (self.roll_icon_clip
@@ -73,6 +75,8 @@ class IconManager:
             self.pitch_icon_clip = (ImageClip(icon_path, duration=duration)
                 .resize(self.icon_size)
                 .on_color(col_opacity=0, size=self.resolution, pos=('center')))
+        else:
+            self.pitch_icon_clip = self.pitch_icon_clip.set_duration(duration)
 
         # rotate it as needed
         rotated_icon_clip = (self.pitch_icon_clip
@@ -107,6 +111,8 @@ class IconManager:
             self.battery_icon_clip = (ImageClip(icon_path, duration=duration)
                 .resize(self.icon_size)
                 .on_color(col_opacity=0, size=self.resolution, pos=('center')))
+        else:
+            self.battery_icon_clip = self.battery_icon_clip.set_duration(duration)
 
         # generate a new text to go with the icon
         charge_txt_clip = TextClip(charge_str, fontsize=self.fontsize, font=self.font).set_duration(duration)
@@ -136,6 +142,8 @@ class IconManager:
             self.speed_icon_clip = (ImageClip(icon_path, duration=duration)
                 .resize(self.icon_size)
                 .on_color(col_opacity=0, size=self.resolution, pos=('center')))
+        else:
+            self.speed_icon_clip = self.speed_icon_clip.set_duration(duration)
 
         # generate a new text to go with the icon
         speed_txt_clip = TextClip(speed_str, fontsize=self.fontsize, font=self.font).set_duration(duration)
@@ -165,6 +173,8 @@ class IconManager:
             self.temp_icon_clip = (ImageClip(icon_path, duration=duration)
                 .resize(self.icon_size)
                 .on_color(col_opacity=0, size=self.resolution, pos=('center')))
+        else:
+            self.temp_icon_clip = self.temp_icon_clip.set_duration(duration)
 
         # generate a new text to go with the icon
         temp_txt_clip = TextClip(temp_str, fontsize=self.fontsize, font=self.font).set_duration(duration)
