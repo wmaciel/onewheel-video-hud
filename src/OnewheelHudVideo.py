@@ -21,7 +21,7 @@ resolution_map = {
 
 class OnewheelHudVideo:
     def __init__(self, data_path, footage_path, orientation='portrait', resolution='1080', start_second=0, skip_rows=0,
-                 length=None, show_time=False):
+                 length=None):
         self.footage_path = footage_path
         self.orientation = orientation
         self.resolutions = compute_resolutions(orientation, resolution)
@@ -30,7 +30,6 @@ class OnewheelHudVideo:
         self.icon_manager = IconManager(resolution=res_2_tuple(self.resolutions['icon']))
         self.data = parse_logs(data_path, skip_rows=skip_rows)
         self.avg_log_delay = compute_average_delta_t(self.data)
-        self.show_time = show_time
 
         print 'Footage is coming from', self.footage_path
         print 'Footage orientation is', self.orientation
@@ -47,11 +46,6 @@ class OnewheelHudVideo:
 
         print 'Generating final clip...'
         final_clip = CompositeVideoClip([footage_clip, info_clip.set_position('bottom', 'center')])
-
-        if self.show_time:
-            print 'Generating time clip...'
-            time_clip = self.generate_time_clip()
-            final_clip = CompositeVideoClip([final_clip, time_clip.set_position('top', 'center')])
 
         if self.length is not None:
             final_clip = final_clip.subclip(t_end=self.length)
@@ -135,8 +129,8 @@ class OnewheelHudVideo:
         footage_clip = (VideoFileClip(self.footage_path)
                         .resize(res_2_tuple(self.resolutions['footage'])))
 
-        # if self.length is not None:
-        #     footage_clip = footage_clip.subclip(t_end=self.length)
+        if self.length is not None:
+            footage_clip = footage_clip.subclip(t_end=self.length)
 
         if self.orientation == 'portrait':
             footage_clip = footage_clip.rotate(-90)
