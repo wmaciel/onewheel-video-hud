@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import csv
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import tqdm
 from moviepy.editor import *
@@ -20,29 +20,29 @@ resolution_map = {
 
 
 class OnewheelHudVideo:
-    def __init__(self, data_path, footage_path, orientation='portrait', resolution='1080', start_second=0, skip_rows=0,
-                 length=None):
+    def __init__(self, data_path, footage_path, orientation='portrait', resolution='1080', start_second=0,
+                 start_date=None, length=None):
         self.footage_path = footage_path
         self.orientation = orientation
         self.resolutions = compute_resolutions(orientation, resolution)
         self.start_second = start_second
         self.length = length
         self.icon_manager = IconManager(resolution=res_2_tuple(self.resolutions['icon']))
-        self.data = parse_logs(data_path, skip_rows=skip_rows)
-        self.avg_log_delay = compute_average_delta_t(self.data)
+        self.data = parse_logs(data_path)
+        self.fps = 60
+        self.start_date = parse_milisecond_time(start_date)
 
         print 'Footage is coming from', self.footage_path
         print 'Footage orientation is', self.orientation
         print 'Resolutions are:'
         print self.resolutions
-        print 'Logging delay is {} seconds'.format(self.avg_log_delay)
 
     def render(self):
         print 'Generating footage clip...'
         footage_clip = self.generate_footage_clip().subclip(t_start=self.start_second)
 
         print 'Generating info clip...'
-        info_clip = self.generate_info_clip()
+        info_clip = self.generate_fps_info_clip(footage_clip, self.start_date)
 
         print 'Generating final clip...'
         final_clip = CompositeVideoClip([footage_clip, info_clip.set_position('bottom', 'center')])
@@ -55,7 +55,7 @@ class OnewheelHudVideo:
         # final_clip.preview(fps=60, audio=False)
         # final_clip.save_frame(filename="frame.png", t=10.669)
 
-    def generate_info_clip(self):
+    def generate_fps_info_clip(self, footage, start_date):
         icon_clips = {
             'speed': [],
             'pitch': [],
@@ -64,23 +64,20 @@ class OnewheelHudVideo:
             'temperature': []
         }
 
-        print 'Getting icons...'
-        i = -1
-        for row in tqdm.tqdm(self.data):
-            if i < len(self.data) - 2:
-                i += 1
-            delta_seconds = self.compute_log_delay(i)
+        frame_duration = 1.0/footage.fps
+        for t in tqdm.tqdm(f_range(0, footage.duration, frame_duration)):
+            row = interpolate_from_data(self.data, timedelta(seconds=t), start_date)
 
             icon_clips['speed'].append(self.icon_manager.get_speed_icon_clip(speed=row['speed'],
-                                                                             duration=delta_seconds))
+                                                                             duration=frame_duration))
             icon_clips['pitch'].append(self.icon_manager.get_pitch_icon_clip(angle=row['pitch'],
-                                                                             duration=delta_seconds))
+                                                                             duration=frame_duration))
             icon_clips['roll'].append(self.icon_manager.get_roll_icon_clip(angle=row['roll'],
-                                                                           duration=delta_seconds))
+                                                                           duration=frame_duration))
             icon_clips['battery'].append(self.icon_manager.get_battery_icon_clip(charge=row['battery'],
-                                                                                 duration=delta_seconds))
+                                                                                 duration=frame_duration))
             icon_clips['temperature'].append(self.icon_manager.get_temperature_icon_clip(temperature=row['motor_temp'],
-                                                                                         duration=delta_seconds))
+                                                                                         duration=frame_duration))
         print 'Combining icons...'
         info_clip = self.combine_info_clips(icon_clips)
         return info_clip
@@ -213,6 +210,37 @@ def parse_logs(file_path, skip_rows=0):
     return data[skip_rows:]
 
 
+def interpolate_from_data(data, delta_t, start_date):
+    # find between which rows is t in
+    t = delta_t + start_date
+    id_1 = None
+    id_2 = None
+    for i, row in enumerate(data):
+        if row['time'] >= t:
+            id_1 = i-1
+            id_2 = i
+            break
+
+    # find interpolation offset x
+    d1 = data[id_1]['time']
+    d2 = data[id_2]['time']
+    x = (t - d1).total_seconds() / (d2 - d1).total_seconds()
+
+    # use x offset to interpolate attributes
+    row = {'time': t}
+    r1 = data[id_1]
+    r2 = data[id_2]
+    for item in r1.items():
+        if item[0] != 'time':
+            a1 = r1[item[0]]
+            a2 = r2[item[0]]
+            if a1 is None or a2 is None:
+                row[item[0]] = None
+            else:
+                row[item[0]] = (a2 - a1) * x + a1
+
+    return row
+
 def compute_average_delta_t(data):
     deltas_s = []
 
@@ -243,18 +271,29 @@ def res_2_tuple(resolution):
     return resolution['h'], resolution['w']
 
 
+def f_range(start, stop, step):
+    """"
+    Implementation of the range built-in range function using floating point numbers as shown at:
+    https://www.pythoncentral.io/pythons-range-function-explained/
+    """
+    i = start
+    while i < stop:
+        yield i
+        i += step
+
+
 if __name__ == '__main__':
     import argparse
 
     parser = argparse.ArgumentParser(description='Generates a HUD video of your onewheel ride from a log file')
     parser.add_argument('log_file', type=str, help='Path to the logfile used to annotate the video')
     parser.add_argument('video_file', type=str, help='Path to the video to be annotated')
-    parser.add_argument('--skip-second', type=float, help='How many seconds to skip from the beginning of the '
-                                                          'original video')
-    parser.add_argument('--skip-row', type=int, help='How many rows to skip from the beginning of the log file')
+    parser.add_argument('--skip-second', type=float, default=0, help='How many seconds to skip from the beginning of'
+                                                                     ' the original video')
+    parser.add_argument('--start-date', type=str, default='0', help='Timestamp at the moment of the frame on skip_second')
     args = parser.parse_args()
     onewheel_video = OnewheelHudVideo(args.log_file,
                                       args.video_file,
                                       start_second=args.skip_second,
-                                      skip_rows=args.skip_row)
+                                      start_date=args.start_date)
     onewheel_video.render()

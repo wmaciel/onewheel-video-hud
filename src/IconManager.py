@@ -99,7 +99,7 @@ class IconManager:
             charge = 0.0
 
         # generate the charge string from value
-        charge_str = '{:d}'.format(charge)
+        charge_str = '{:d}'.format(int(round(charge)))
 
         # if we have a cache hit, use the cached value
         if charge_str in self.cached_clips['battery']:
