@@ -21,15 +21,14 @@ resolution_map = {
 
 class OnewheelHudVideo:
     def __init__(self, data_path, footage_path, orientation='portrait', resolution='1080', start_second=0,
-                 start_date=None, length=None):
+                 start_date=None, end_second=None):
         self.footage_path = footage_path
         self.orientation = orientation
         self.resolutions = compute_resolutions(orientation, resolution)
         self.start_second = start_second
-        self.length = length
+        self.end_second = end_second
         self.icon_manager = IconManager(resolution=res_2_tuple(self.resolutions['icon']))
         self.data = parse_logs(data_path)
-        self.fps = 60
         self.start_date = parse_milisecond_time(start_date)
 
         print 'Footage is coming from', self.footage_path
@@ -39,16 +38,13 @@ class OnewheelHudVideo:
 
     def render(self):
         print 'Generating footage clip...'
-        footage_clip = self.generate_footage_clip().subclip(t_start=self.start_second)
+        footage_clip = self.generate_footage_clip()
 
         print 'Generating info clip...'
         info_clip = self.generate_fps_info_clip(footage_clip, self.start_date)
 
         print 'Generating final clip...'
         final_clip = CompositeVideoClip([footage_clip, info_clip.set_position('bottom', 'center')])
-
-        if self.length is not None:
-            final_clip = final_clip.subclip(t_end=self.length)
 
         print 'Rendering...'
         final_clip.write_videofile("onewheel.MP4", fps=60, threads=8)
@@ -126,8 +122,7 @@ class OnewheelHudVideo:
         footage_clip = (VideoFileClip(self.footage_path)
                         .resize(res_2_tuple(self.resolutions['footage'])))
 
-        if self.length is not None:
-            footage_clip = footage_clip.subclip(t_end=self.length)
+        footage_clip = footage_clip.subclip(t_start=self.start_second, t_end=self.end_second)
 
         if self.orientation == 'portrait':
             footage_clip = footage_clip.rotate(-90)
@@ -288,12 +283,16 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generates a HUD video of your onewheel ride from a log file')
     parser.add_argument('log_file', type=str, help='Path to the logfile used to annotate the video')
     parser.add_argument('video_file', type=str, help='Path to the video to be annotated')
-    parser.add_argument('--skip-second', type=float, default=0, help='How many seconds to skip from the beginning of'
-                                                                     ' the original video')
-    parser.add_argument('--start-date', type=str, default='0', help='Timestamp at the moment of the frame on skip_second')
+    parser.add_argument('--start-second', type=float, default=0, help='Which second of the original footage should the '
+                                                                      'final video start from')
+    parser.add_argument('--start-date', type=str, default='0', help='Timestamp at the moment of the frame on '
+                                                                    'start_second')
+    parser.add_argument('--end-second', type=float, default=None, help='Which second of the original footage the the '
+                                                                       'final video end at')
     args = parser.parse_args()
     onewheel_video = OnewheelHudVideo(args.log_file,
                                       args.video_file,
-                                      start_second=args.skip_second,
-                                      start_date=args.start_date)
+                                      start_second=args.start_second,
+                                      start_date=args.start_date,
+                                      end_second=args.end_second)
     onewheel_video.render()

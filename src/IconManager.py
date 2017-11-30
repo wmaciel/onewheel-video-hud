@@ -80,7 +80,7 @@ class IconManager:
 
         # rotate it as needed
         rotated_icon_clip = (self.pitch_icon_clip
-                .rotate(-float(angle), expand=False)
+                .rotate(float(angle), expand=False)
                 .resize(self.resolution))
 
         # generate a new text to go with the icon
