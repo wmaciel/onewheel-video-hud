@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 from moviepy.editor import *
 
+
 class IconManager:
-    def __init__(self, resolution=(30,30), padding=10, font='Arial', fontsize=50, txt_position=(0.5, 0.8)):
+    def __init__(self, resolution=(30, 30), padding=10, font='Arial', fontsize=50, txt_position=(0.5, 0.8)):
         self.resolution = resolution
         self.padding = padding
         self.icon_size = tuple(map(lambda x: x - padding, resolution))
@@ -38,14 +39,14 @@ class IconManager:
         if self.roll_icon_clip is None:
             icon_path = '../data/roll.png'
             self.roll_icon_clip = (ImageClip(icon_path, duration=duration)
-                .resize(self.icon_size))
+                                   .resize(self.icon_size))
         else:
             self.roll_icon_clip = self.roll_icon_clip.set_duration(duration)
 
         # rotate it as needed
         rotated_icon_clip = (self.roll_icon_clip
-                .rotate(float(angle), expand=False)
-                .on_color(col_opacity=0, size=self.resolution, pos=('center')))
+                             .rotate(float(angle), expand=False)
+                             .on_color(col_opacity=0, size=self.resolution, pos='center'))
 
         # generate a new text to go with the icon
         angle_txt_clip = TextClip(angle_str, fontsize=self.fontsize, font=self.font).set_duration(duration)
@@ -73,15 +74,15 @@ class IconManager:
         if self.pitch_icon_clip is None:
             icon_path = '../data/pitch.png'
             self.pitch_icon_clip = (ImageClip(icon_path, duration=duration)
-                .resize(self.icon_size)
-                .on_color(col_opacity=0, size=self.resolution, pos=('center')))
+                                    .resize(self.icon_size)
+                                    .on_color(col_opacity=0, size=self.resolution, pos='center'))
         else:
             self.pitch_icon_clip = self.pitch_icon_clip.set_duration(duration)
 
         # rotate it as needed
         rotated_icon_clip = (self.pitch_icon_clip
-                .rotate(float(angle), expand=False)
-                .resize(self.resolution))
+                             .rotate(float(angle), expand=False)
+                             .resize(self.resolution))
 
         # generate a new text to go with the icon
         angle_txt_clip = TextClip(angle_str, fontsize=self.fontsize, font=self.font).set_duration(duration)
@@ -107,10 +108,10 @@ class IconManager:
 
         # else, create a new clip
         if self.battery_icon_clip is None:
-            icon_path = '../data/battery.png'
+            icon_path = self.compute_battery_icon_path(charge)
             self.battery_icon_clip = (ImageClip(icon_path, duration=duration)
-                .resize(self.icon_size)
-                .on_color(col_opacity=0, size=self.resolution, pos=('center')))
+                                      .resize(self.icon_size)
+                                      .on_color(col_opacity=0, size=self.resolution, pos='center'))
         else:
             self.battery_icon_clip = self.battery_icon_clip.set_duration(duration)
 
@@ -123,6 +124,25 @@ class IconManager:
 
         # return it
         return new_icon_clip
+
+    def compute_battery_icon_path(self, charge):
+        tier_paths = {
+            999: '../data/battery.png',
+            100: '../data/battery_100.png',
+            90: '../data/battery_90.png',
+            80: '../data/battery_80.png',
+            60: '../data/battery_60.png',
+            50: '../data/battery_50.png',
+            30: '../data/battery_30.png',
+            20: '../data/battery_20.png',
+            -999: '../data/battery.png'
+        }
+        prev_t = 999
+        for t in sorted(tier_paths.keys(), reverse=True):
+            if charge > t:
+                return tier_paths[prev_t]
+            else:
+                prev_t = t
 
     def get_speed_icon_clip(self, speed=0.0, duration=1.0):
         # fix invalid value
@@ -140,8 +160,8 @@ class IconManager:
         if self.speed_icon_clip is None:
             icon_path = '../data/speed.png'
             self.speed_icon_clip = (ImageClip(icon_path, duration=duration)
-                .resize(self.icon_size)
-                .on_color(col_opacity=0, size=self.resolution, pos=('center')))
+                                    .resize(self.icon_size)
+                                    .on_color(col_opacity=0, size=self.resolution, pos='center'))
         else:
             self.speed_icon_clip = self.speed_icon_clip.set_duration(duration)
 
@@ -171,8 +191,8 @@ class IconManager:
         if self.temp_icon_clip is None:
             icon_path = '../data/temp.png'
             self.temp_icon_clip = (ImageClip(icon_path, duration=duration)
-                .resize(self.icon_size)
-                .on_color(col_opacity=0, size=self.resolution, pos=('center')))
+                                   .resize(self.icon_size)
+                                   .on_color(col_opacity=0, size=self.resolution, pos='center'))
         else:
             self.temp_icon_clip = self.temp_icon_clip.set_duration(duration)
 
