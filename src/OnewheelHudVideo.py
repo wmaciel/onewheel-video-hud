@@ -61,8 +61,9 @@ class OnewheelHudVideo:
         }
 
         frame_duration = 1.0/footage.fps
+        last_id = 0
         for t in tqdm.tqdm(f_range(0, footage.duration, frame_duration)):
-            row = interpolate_from_data(self.data, timedelta(seconds=t), start_date)
+            row, last_id = interpolate_from_data(self.data, timedelta(seconds=t), start_date, last_id)
 
             icon_clips['speed'].append(self.icon_manager.get_speed_icon_clip(speed=row['speed'],
                                                                              duration=frame_duration))
@@ -205,15 +206,15 @@ def parse_logs(file_path, skip_rows=0):
     return data[skip_rows:]
 
 
-def interpolate_from_data(data, delta_t, start_date):
+def interpolate_from_data(data, delta_t, start_date, last_id=0):
     # find between which rows is t in
     t = delta_t + start_date
     id_1 = None
     id_2 = None
-    for i, row in enumerate(data):
+    for i, row in enumerate(data[last_id:]):
         if row['time'] >= t:
-            id_1 = i-1
-            id_2 = i
+            id_2 = i + last_id
+            id_1 = id_2 - 1
             break
 
     # find interpolation offset x
@@ -234,7 +235,7 @@ def interpolate_from_data(data, delta_t, start_date):
             else:
                 row[item[0]] = (a2 - a1) * x + a1
 
-    return row
+    return row, id_2
 
 def compute_average_delta_t(data):
     deltas_s = []
