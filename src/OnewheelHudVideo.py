@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
-import csv
-from datetime import datetime, timedelta
-
+from datetime import timedelta
 import tqdm
 from moviepy.editor import *
-
 from IconManager import IconManager
+import LogParser
 
 resolution_map = {
     '1080': {
@@ -21,15 +19,15 @@ resolution_map = {
 
 class OnewheelHudVideo:
     def __init__(self, data_path, footage_path, orientation='portrait', resolution='1080', start_second=0,
-                 start_date=None, end_second=None):
+                 start_date=None, end_second=None, unit='mm'):
         self.footage_path = footage_path
         self.orientation = orientation
         self.resolutions = compute_resolutions(orientation, resolution)
         self.start_second = start_second
         self.end_second = end_second
         self.icon_manager = IconManager(resolution=res_2_tuple(self.resolutions['icon']))
-        self.data = parse_logs(data_path)
-        self.start_date = parse_milisecond_time(start_date)
+        self.data = LogParser.parse(data_path, unit)
+        self.start_date = LogParser.parse_millisecond_time(start_date)
 
         print 'Footage is coming from', self.footage_path
         print 'Footage orientation is', self.orientation
@@ -155,57 +153,6 @@ def compute_resolutions(orientation, resolution_name):
     return resolutions
 
 
-def mile_to_km(mile):
-    """
-    Converts Miles to Kilometers
-    """
-    return float(mile) * 1.609344
-
-
-def f_to_c(f_temp):
-    """
-    Converts from Farenheint to Celsius
-    """
-    try:
-        return (float(f_temp) - 32) * 5.0 / 9.0
-    except ValueError:
-        return None
-
-
-def parse_angle(angle_text, invert=False):
-    """
-    Converts the original angle to values between -180 and 180, with 0 being horizontal
-    """
-    try:
-        angle = float(angle_text) / 10 - 180
-        if invert:
-            angle = -angle
-        return angle
-    except ValueError:
-        return None
-
-
-def parse_logs(file_path, skip_rows=0):
-    """
-    Parses the log files and creates a list of dicts
-    """
-    print 'Loading log file ', file_path, '...'
-    data = []
-    with open(file_path) as logfile:
-        log_reader = csv.DictReader(logfile)
-        for row in log_reader:
-            data.append({
-                'time': parse_milisecond_time(row['time']),
-                'speed': mile_to_km(row['speed']),
-                'battery': int(row['battery']),
-                'roll': parse_angle(row['tilt_angle_roll'], invert=True),
-                'pitch': parse_angle(row['tilt_angle_pitch']),
-                'motor_temp': f_to_c(row['motor_temp'])
-            })
-    print 'Loaded ', len(data), 'rows'
-    return data[skip_rows:]
-
-
 def interpolate_from_data(data, delta_t, start_date, last_id=0):
     # find between which rows is t in
     t = delta_t + start_date
@@ -237,6 +184,7 @@ def interpolate_from_data(data, delta_t, start_date, last_id=0):
 
     return row, id_2
 
+
 def compute_average_delta_t(data):
     deltas_s = []
 
@@ -246,18 +194,6 @@ def compute_average_delta_t(data):
             deltas_s.append(round(delta_t.seconds + delta_t.microseconds * 1e-6, 2))
 
     return sum(deltas_s) / len(deltas_s)
-
-
-def parse_original_time(time_str):
-    # remove timezone info
-    time_str = time_str[:-5]
-    return datetime.strptime(time_str, '%Y-%m-%dT%H:%M:%S')
-
-
-def parse_milisecond_time(time_str):  # "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
-    # remove timezone info
-    time_str = time_str[:-5]
-    return datetime.strptime(time_str, '%Y-%m-%dT%H:%M:%S.%f')
 
 
 def res_2_tuple(resolution):
@@ -290,10 +226,14 @@ if __name__ == '__main__':
                                                                     'start_second')
     parser.add_argument('--end-second', type=float, default=None, help='Which second of the original footage the the '
                                                                        'final video end at')
+    parser.add_argument('--unit', type=str, default='mm', choices=['mm', 'mi', 'im', 'ii'],
+                        help='Defines input output unit conversion with two letters. The first denotes the input unit '
+                             'and the second denotes the output unit.')
     args = parser.parse_args()
     onewheel_video = OnewheelHudVideo(args.log_file,
                                       args.video_file,
                                       start_second=args.start_second,
                                       start_date=args.start_date,
-                                      end_second=args.end_second)
+                                      end_second=args.end_second,
+                                      unit=args.unit)
     onewheel_video.render()
