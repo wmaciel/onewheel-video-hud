@@ -181,7 +181,7 @@ class IconManager:
             temperature = 0.0
 
         # generate the string from value
-        temp_str = '{:.1f}'.format(temperature)
+        temp_str = '{:d}'.format(int(round(temperature)))
 
         # if we have a cache hit, use the cached value
         if temp_str in self.cached_clips['temperature']:
