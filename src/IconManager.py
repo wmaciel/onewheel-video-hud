@@ -152,7 +152,7 @@ class IconManager:
             speed = 0.0
 
         # generate the string from value
-        speed_str = '{:.2f}'.format(speed)
+        speed_str = '{:.1f}'.format(speed)
 
         # if we have a cache hit, use the cached value
         if speed_str in self.cached_clips['speed']:
