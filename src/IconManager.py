@@ -215,7 +215,8 @@ class IconManager:
         angle = (a_max - a_min) * t + a_min
 
         final_speed_icon = CompositeVideoClip([self.speed_icon_bg_clip,
-                                               self.speed_icon_pointer_clip.rotate(-angle, expand=False)])
+                                               self.speed_icon_pointer_clip.rotate(-angle, expand=False,
+                                                                                   resample='nearest')])
 
         # generate a new text to go with the icon
         speed_txt_clip = TextClip(speed_str, fontsize=self.fontsize, font=self.font).set_duration(duration)
