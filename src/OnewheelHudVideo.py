@@ -19,7 +19,7 @@ resolution_map = {
 
 class OnewheelHudVideo:
     def __init__(self, data_path, footage_path, orientation='portrait', resolution='1080', start_second=0,
-                 start_date=None, end_second=None, unit='mm'):
+                 start_date=None, end_second=None, unit='mm', out_path='onewheel.MP4'):
         self.footage_path = footage_path
         self.orientation = orientation
         self.resolutions = compute_resolutions(orientation, resolution)
@@ -29,6 +29,7 @@ class OnewheelHudVideo:
                                         unit='metric' if unit[1] == 'm' else 'imperial')
         self.data = LogParser.parse(data_path, unit)
         self.start_date = LogParser.parse_millisecond_time(start_date)
+        self.out_path = out_path
 
         print 'Footage is coming from', self.footage_path
         print 'Footage orientation is', self.orientation
@@ -46,7 +47,7 @@ class OnewheelHudVideo:
         final_clip = CompositeVideoClip([footage_clip, info_clip.set_position('bottom', 'center')])
 
         print 'Rendering...'
-        final_clip.write_videofile("onewheel.MP4", fps=60, threads=8)
+        final_clip.write_videofile(self.out_path, fps=60, threads=8)
         # final_clip.preview(fps=60, audio=False)
         # final_clip.save_frame(filename="frame.png", t=10.669)
 
@@ -221,20 +222,24 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generates a HUD video of your onewheel ride from a log file')
     parser.add_argument('log_file', type=str, help='Path to the logfile used to annotate the video')
     parser.add_argument('video_file', type=str, help='Path to the video to be annotated')
-    parser.add_argument('--start-second', type=float, default=0, help='Which second of the original footage should the '
-                                                                      'final video start from')
-    parser.add_argument('--start-date', type=str, default='0', help='Timestamp at the moment of the frame on '
-                                                                    'start_second')
-    parser.add_argument('--end-second', type=float, default=None, help='Which second of the original footage the the '
-                                                                       'final video end at')
+    parser.add_argument('--start-second', type=float, default=0,
+                        help='Which second of the original footage should the final video start from')
+    parser.add_argument('--start-date', type=str, default='0',
+                        help='Timestamp at the moment of the frame on start_second')
+    parser.add_argument('--end-second', type=float, default=None,
+                        help='Which second of the original footage the the final video end at')
     parser.add_argument('--unit', type=str, default='mm', choices=['mm', 'mi', 'im', 'ii'],
                         help='Defines input output unit conversion with two letters. The first denotes the input unit '
                              'and the second denotes the output unit.')
+    parser.add_argument('--output-file', '-o', type=str,
+                        help='Path the output file. If none is given a file called onewheel.MP4 will be created on the '
+                             'directory the script if being run.')
     args = parser.parse_args()
     onewheel_video = OnewheelHudVideo(args.log_file,
                                       args.video_file,
                                       start_second=args.start_second,
                                       start_date=args.start_date,
                                       end_second=args.end_second,
-                                      unit=args.unit)
+                                      unit=args.unit,
+                                      out_path=args.output_file)
     onewheel_video.render()
