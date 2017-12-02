@@ -21,11 +21,15 @@ class IconManager:
         self.units = {
             'metric': {
                 'speed': 'Km/h',
-                'temperature': '°C'
+                'temperature': '°C',
+                'speed_max': 30.0,
+                'speed_min': 0.0
             },
             'imperial': {
                 'speed': 'M.P.H.',
-                'temperature': '°F'
+                'temperature': '°F',
+                'speed_max': 19.0,
+                'speed_min': 0.0
             }
         }
         self.unit = self.units[unit]
@@ -220,8 +224,8 @@ class IconManager:
             self.speed_icon_pointer_clip = self.speed_icon_pointer_clip.set_duration(duration)
 
         # figure out how much to turn the speed pointer
-        v_max = 30.0   # Km/h
-        v_min = 0.0    # Km/h
+        v_max = self.unit['speed_max']
+        v_min = self.unit['speed_min']
         t = (speed - v_min) / (v_max - v_min)
         a_max = 90.0   # degrees
         a_min = -90.0  # degrees
