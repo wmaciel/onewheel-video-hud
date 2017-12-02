@@ -25,7 +25,8 @@ class OnewheelHudVideo:
         self.resolutions = compute_resolutions(orientation, resolution)
         self.start_second = start_second
         self.end_second = end_second
-        self.icon_manager = IconManager(resolution=res_2_tuple(self.resolutions['icon']))
+        self.icon_manager = IconManager(resolution=res_2_tuple(self.resolutions['icon']),
+                                        unit='metric' if unit[1] == 'm' else 'imperial')
         self.data = LogParser.parse(data_path, unit)
         self.start_date = LogParser.parse_millisecond_time(start_date)
 

@@ -3,7 +3,8 @@ from moviepy.editor import *
 
 
 class IconManager:
-    def __init__(self, resolution=(30, 30), padding=10, font='Arial', fontsize=50, txt_position=(0.5, 0.8)):
+    def __init__(self, resolution=(30, 30), padding=10, font='Arial',
+                 fontsize=50, txt_position=(0.5, 0.8), unit_position=(0.5, 0.2), unit='metric'):
         self.resolution = resolution
         self.padding = padding
         self.icon_size = tuple(map(lambda x: x - padding, resolution))
@@ -17,6 +18,18 @@ class IconManager:
         self.speed_icon_bg_clip = None
         self.speed_icon_pointer_clip = None
         self.temp_icon_clip = None
+        self.units = {
+            'metric': {
+                'speed': 'Km/h',
+                'temperature': '°C'
+            },
+            'imperial': {
+                'speed': 'M.P.H.',
+                'temperature': '°F'
+            }
+        }
+        self.unit = self.units[unit]
+        self.unit_position = unit_position
         self.cached_clips = {
             'roll': {},
             'pitch': {},
@@ -102,7 +115,7 @@ class IconManager:
             charge = 0.0
 
         # generate the charge string from value
-        charge_str = '{:d}'.format(int(round(charge)))
+        charge_str = '{:d}%'.format(int(round(charge)))
 
         # if we have a cache hit, use the cached value
         if charge_str in self.cached_clips['battery']:
@@ -183,7 +196,7 @@ class IconManager:
             speed = 0.0
 
         # generate the string from value
-        speed_str = '{:.2f}'.format(speed)
+        speed_str = '{:.1f}'.format(speed)
 
         # if we have a cache hit, use the cached value
         if speed_str in self.cached_clips['speed']:
@@ -218,9 +231,16 @@ class IconManager:
                                                self.speed_icon_pointer_clip.rotate(-angle, expand=False,
                                                                                    resample='nearest')])
 
-        # generate a new text to go with the icon
+        # generate text to show speed
         speed_txt_clip = TextClip(speed_str, fontsize=self.fontsize, font=self.font).set_duration(duration)
+
+        # generate text to show unit
+        speed_unit_clip = (TextClip(self.unit['speed'], fontsize=self.fontsize / 2, font=self.font)
+                           .set_duration(duration))
+
+        # composite text with icon
         new_icon_clip = self.composite_icon_text(final_speed_icon, speed_txt_clip, self.txt_position)
+        new_icon_clip = self.composite_icon_text(new_icon_clip, speed_unit_clip, self.unit_position)
 
         # add it to the cache
         self.cached_clips['speed'][speed_str] = new_icon_clip
@@ -251,7 +271,10 @@ class IconManager:
 
         # generate a new text to go with the icon
         temp_txt_clip = TextClip(temp_str, fontsize=self.fontsize, font=self.font).set_duration(duration)
+        temp_unit_clip = (TextClip(self.unit['temperature'], fontsize=self.fontsize/2, font=self.font)
+                          .set_duration(duration))
         new_icon_clip = self.composite_icon_text(self.temp_icon_clip, temp_txt_clip, self.txt_position)
+        new_icon_clip = self.composite_icon_text(new_icon_clip, temp_unit_clip, self.unit_position)
 
         # add it to the cache
         self.cached_clips['temperature'][temp_str] = new_icon_clip
