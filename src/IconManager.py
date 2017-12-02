@@ -14,6 +14,8 @@ class IconManager:
         self.roll_icon_clip = None
         self.battery_icon_clip = None
         self.speed_icon_clip = None
+        self.speed_icon_bg_clip = None
+        self.speed_icon_pointer_clip = None
         self.temp_icon_clip = None
         self.cached_clips = {
             'roll': {},
@@ -168,6 +170,56 @@ class IconManager:
         # generate a new text to go with the icon
         speed_txt_clip = TextClip(speed_str, fontsize=self.fontsize, font=self.font).set_duration(duration)
         new_icon_clip = self.composite_icon_text(self.speed_icon_clip, speed_txt_clip, self.txt_position)
+
+        # add it to the cache
+        self.cached_clips['speed'][speed_str] = new_icon_clip
+
+        # return it
+        return new_icon_clip
+
+    def get_animated_speed_icon_clip(self, speed=0.0, duration=1.0):
+        # fix invalid value
+        if speed is None:
+            speed = 0.0
+
+        # generate the string from value
+        speed_str = '{:.2f}'.format(speed)
+
+        # if we have a cache hit, use the cached value
+        if speed_str in self.cached_clips['speed']:
+            return self.cached_clips['speed'][speed_str]
+
+        # else, create a new clip
+        if self.speed_icon_bg_clip is None:
+            bg_path = '../data/speed_bg.png'
+            self.speed_icon_bg_clip = (ImageClip(bg_path, duration=duration)
+                                       .resize(self.icon_size)
+                                       .on_color(col_opacity=0, size=self.resolution, pos='center'))
+        else:
+            self.speed_icon_bg_clip = self.speed_icon_bg_clip.set_duration(duration)
+
+        if self.speed_icon_pointer_clip is None:
+            pointer_path = '../data/speed_pointer.png'
+            self.speed_icon_pointer_clip = (ImageClip(pointer_path, duration=duration)
+                                            .resize(self.icon_size)
+                                            .on_color(col_opacity=0, size=self.resolution, pos='center'))
+        else:
+            self.speed_icon_pointer_clip = self.speed_icon_pointer_clip.set_duration(duration)
+
+        # figure out how much to turn the speed pointer
+        v_max = 30.0   # Km/h
+        v_min = 0.0    # Km/h
+        t = (speed - v_min) / (v_max - v_min)
+        a_max = 90.0   # degrees
+        a_min = -90.0  # degrees
+        angle = (a_max - a_min) * t + a_min
+
+        final_speed_icon = CompositeVideoClip([self.speed_icon_bg_clip,
+                                               self.speed_icon_pointer_clip.rotate(-angle, expand=False)])
+
+        # generate a new text to go with the icon
+        speed_txt_clip = TextClip(speed_str, fontsize=self.fontsize, font=self.font).set_duration(duration)
+        new_icon_clip = self.composite_icon_text(final_speed_icon, speed_txt_clip, self.txt_position)
 
         # add it to the cache
         self.cached_clips['speed'][speed_str] = new_icon_clip

@@ -63,7 +63,7 @@ class OnewheelHudVideo:
         for t in tqdm.tqdm(f_range(0, footage.duration, frame_duration)):
             row, last_id = interpolate_from_data(self.data, timedelta(seconds=t), start_date, last_id)
 
-            icon_clips['speed'].append(self.icon_manager.get_speed_icon_clip(speed=row['speed'],
+            icon_clips['speed'].append(self.icon_manager.get_animated_speed_icon_clip(speed=row['speed'],
                                                                              duration=frame_duration))
             icon_clips['pitch'].append(self.icon_manager.get_pitch_icon_clip(angle=row['pitch'],
                                                                              duration=frame_duration))
