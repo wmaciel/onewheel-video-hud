@@ -126,13 +126,10 @@ class IconManager:
             return self.cached_clips['battery'][charge_str]
 
         # else, create a new clip
-        if self.battery_icon_clip is None:
-            icon_path = self.compute_battery_icon_path(charge)
-            self.battery_icon_clip = (ImageClip(icon_path, duration=duration)
-                                      .resize(self.icon_size)
-                                      .on_color(col_opacity=0, size=self.resolution, pos='center'))
-        else:
-            self.battery_icon_clip = self.battery_icon_clip.set_duration(duration)
+        icon_path = self.compute_battery_icon_path(charge)
+        self.battery_icon_clip = (ImageClip(icon_path, duration=duration)
+                                  .resize(self.icon_size)
+                                  .on_color(col_opacity=0, size=self.resolution, pos='center'))
 
         # generate a new text to go with the icon
         charge_txt_clip = TextClip(charge_str, fontsize=self.fontsize, font=self.font).set_duration(duration)
