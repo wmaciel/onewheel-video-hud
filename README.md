@@ -6,7 +6,7 @@ As it stands now, this script can show speed, pitch and roll angle, motor temper
 ## Example
 This is a sample of what this script will output
 
-[![Video link](https://img.youtube.com/vi/VHmiHYOi65c/hqdefault.jpg)](https://youtu.be/VHmiHYOi65c)
+[![Video link](https://img.youtube.com/vi/yXMGHKQnptA/hqdefault.jpg)](https://youtu.be/yXMGHKQnptA)
 
 ## How to use
 The script contains a help output which should be able to explain all the parameters it takes.
