@@ -19,15 +19,19 @@ def parse(file_path, unit):
                 'battery': parse_battery(row['battery']),
                 'roll': parse_angle(row['tilt_angle_roll'], invert=True),
                 'pitch': parse_angle(row['tilt_angle_pitch']),
-                'motor_temp': parse_temperature(row['motor_temp'], unit)
+                'motor_temp': parse_temperature(row['motor_temp'], unit),
+                'distance': parse_distance(row['odometer'], unit)
             })
     print 'Loaded ', len(data), 'rows'
     return data
 
 
-def parse_speed(original, unit):
+def parse_distance(original, unit):
     """
-    Converts the original speed to the desired unit system
+    Converts the original distance to the desired unit system
+    :param original:
+    :param unit:
+    :return:
     """
     if unit[0] == unit[1]:
         try:
@@ -36,8 +40,15 @@ def parse_speed(original, unit):
             return None
     if unit[1] == 'm':  # imperial to metric
         return mile_to_km(original)
-    else:  # unit[1] == 'i'
+    else:  # metric to imperial
         return km_to_mile(original)
+
+
+def parse_speed(original, unit):
+    """
+    Converts the original speed to the desired unit system
+    """
+    return parse_distance(original, unit)
 
 
 def parse_millisecond_time(time_str):
